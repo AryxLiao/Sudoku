@@ -2,24 +2,18 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <!-- Viewport 設定：加入 viewport-fit=cover 以適配全螢幕 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- iOS Web App 設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="數獨大師">
     
-    <!-- Android / Desktop Web App 設定 -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#ffffff">
 
-    <title>數獨大師 Sudoku</title>
+    <title>數獨大師 (Sudoku Master)</title>
 
-    <!-- 內嵌 Manifest (讓瀏覽器識別為 App) -->
     <link rel="manifest" href='data:application/manifest+json;base64,ewogICJuYW1lIjogIuZWuOeNqOWkp+W4qyIsCiAgInNob3J0X25hbWUiOiAi5pW4542oIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJ0aGVtZV9jb2xvciI6ICIjMGVhNWU5IiwKICAiaWNvbnMiOiBbXQp9'>
-
-    <!-- 內嵌 Apple Touch Icon (簡單的 SVG 圖標) -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' style='background:%230ea5e9'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='300' fill='white' font-family='sans-serif' font-weight='bold'%3E9%3C/text%3E%3C/svg%3E">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' style='background:%230ea5e9'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='300' fill='white' font-family='sans-serif' font-weight='bold'%3E9%3C/text%3E%3C/svg%3E">
 
@@ -66,7 +60,6 @@
                             '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
                         }
                     },
-                    // 增加安全區域 padding
                     spacing: {
                         'safe-top': 'env(safe-area-inset-top)',
                         'safe-bottom': 'env(safe-area-inset-bottom)',
@@ -78,22 +71,19 @@
         }
     </script>
     <style>
-        /* 防止 iOS 點擊高亮與縮放行為 */
         html {
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
         }
 
-        /* 網格邊框樣式 */
         .sudoku-cell {
             border-right: 1px solid #e2e8f0;
             border-bottom: 1px solid #e2e8f0;
             user-select: none;
-            -webkit-user-select: none; /* iOS Safari */
+            -webkit-user-select: none;
             cursor: pointer;
             transition: all 0.1s ease-in-out;
         }
-        /* 區塊加粗 */
         .sudoku-cell:nth-child(n+19):nth-child(-n+27),
         .sudoku-cell:nth-child(n+46):nth-child(-n+54) {
             border-bottom: 2px solid #475569;
@@ -105,10 +95,8 @@
         .sudoku-cell:nth-child(9n) { border-right: none; }
         .sudoku-cell:nth-child(n+73) { border-bottom: none; }
 
-        /* 隱藏卷軸 */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         
-        /* 筆記網格 */
         .note-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -126,9 +114,8 @@
             color: #64748b;
         }
         
-        @media (min-width: 640px) { .note-num { font-size: 10px; } }
+        @media (min-width: 768px) { .note-num { font-size: 12px; } }
 
-        /* Dark Mode 邊框調整 */
         .dark .sudoku-cell { border-color: #334155; }
         .dark .sudoku-cell:nth-child(n+19):nth-child(-n+27),
         .dark .sudoku-cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #94a3b8; }
@@ -136,14 +123,12 @@
         .dark .sudoku-cell:nth-child(9n+6) { border-right: 2px solid #94a3b8; }
         .dark .note-num { color: #94a3b8; }
 
-        /* 數字鍵盤完成狀態 */
         .numpad-btn.completed {
             opacity: 0.2;
             pointer-events: none;
             filter: grayscale(100%);
         }
 
-        /* iPad Standalone 優化 */
         body.standalone-mode {
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
@@ -158,99 +143,89 @@
 
     <!-- Menu Screen -->
     <div id="menu-screen" class="fixed inset-0 z-40 bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-4 animate-fade-in pt-safe-top pb-safe-bottom">
-        <div class="mb-8 text-center">
-            <div class="inline-block p-4 bg-brand-100 dark:bg-slate-800 rounded-2xl mb-4 shadow-lg transform rotate-3 hover:rotate-6 transition">
-                <svg class="w-16 h-16 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="mb-8 md:mb-12 text-center">
+            <div class="inline-block p-4 md:p-6 bg-brand-100 dark:bg-slate-800 rounded-2xl mb-4 shadow-lg transform rotate-3 hover:rotate-6 transition">
+                <svg class="w-16 h-16 md:w-24 md:h-24 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
             </div>
-            <h1 class="text-4xl font-extrabold text-slate-800 dark:text-white tracking-tight">數獨 Sudoku</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">鍛鍊邏輯思維</p>
+            <h1 class="text-4xl md:text-6xl font-extrabold text-slate-800 dark:text-white tracking-tight">數獨大師</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-2 md:mt-4 font-medium text-base md:text-xl">鍛鍊你的邏輯思維</p>
         </div>
 
-        <div class="w-full max-w-xs space-y-3">
-            <button class="menu-btn w-full py-3.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600 dark:hover:border-brand-400 dark:hover:text-brand-400 font-bold text-lg shadow-sm transition active:scale-95 flex items-center justify-between px-6 group" data-mode="easy">
+        <div class="w-full max-w-xs md:max-w-md space-y-3 md:space-y-5">
+            <button class="menu-btn w-full py-3.5 md:py-5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600 dark:hover:border-brand-400 dark:hover:text-brand-400 font-bold text-lg md:text-2xl shadow-sm transition active:scale-95 flex items-center justify-between px-6 md:px-8 group" data-mode="easy">
                 <span class="group-hover:translate-x-1 transition-transform">簡單</span>
-                <span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">入門</span>
+                <span class="text-xs md:text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 md:px-3 py-0.5 md:py-1 rounded-full">入門</span>
             </button>
-            <button class="menu-btn w-full py-3.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600 dark:hover:border-brand-400 dark:hover:text-brand-400 font-bold text-lg shadow-sm transition active:scale-95 flex items-center justify-between px-6 group" data-mode="medium">
+            <button class="menu-btn w-full py-3.5 md:py-5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600 dark:hover:border-brand-400 dark:hover:text-brand-400 font-bold text-lg md:text-2xl shadow-sm transition active:scale-95 flex items-center justify-between px-6 md:px-8 group" data-mode="medium">
                 <span class="group-hover:translate-x-1 transition-transform">中等</span>
-                <span class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-0.5 rounded-full">進階</span>
+                <span class="text-xs md:text-sm bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 md:px-3 py-0.5 md:py-1 rounded-full">進階</span>
             </button>
-            <button class="menu-btn w-full py-3.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600 dark:hover:border-brand-400 dark:hover:text-brand-400 font-bold text-lg shadow-sm transition active:scale-95 flex items-center justify-between px-6 group" data-mode="hard">
+            <button class="menu-btn w-full py-3.5 md:py-5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600 dark:hover:border-brand-400 dark:hover:text-brand-400 font-bold text-lg md:text-2xl shadow-sm transition active:scale-95 flex items-center justify-between px-6 md:px-8 group" data-mode="hard">
                 <span class="group-hover:translate-x-1 transition-transform">困難</span>
-                <span class="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 py-0.5 rounded-full">燒腦</span>
+                <span class="text-xs md:text-sm bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 md:px-3 py-0.5 md:py-1 rounded-full">燒腦</span>
             </button>
-            <button class="menu-btn w-full py-3.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-red-500 hover:text-red-600 dark:hover:border-red-400 dark:hover:text-red-400 font-bold text-lg shadow-sm transition active:scale-95 flex items-center justify-between px-6 group" data-mode="expert">
+            <button class="menu-btn w-full py-3.5 md:py-5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-red-500 hover:text-red-600 dark:hover:border-red-400 dark:hover:text-red-400 font-bold text-lg md:text-2xl shadow-sm transition active:scale-95 flex items-center justify-between px-6 md:px-8 group" data-mode="expert">
                 <span class="group-hover:translate-x-1 transition-transform">專家</span>
-                <span class="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-full">極限</span>
+                <span class="text-xs md:text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 md:px-3 py-0.5 md:py-1 rounded-full">極限</span>
             </button>
             
-            <div class="relative pt-4">
+            <div class="relative pt-4 md:pt-6">
                 <div class="absolute inset-0 flex items-center" aria-hidden="true">
                     <div class="w-full border-t border-slate-300 dark:border-slate-700"></div>
                 </div>
                 <div class="relative flex justify-center">
-                    <span class="bg-slate-50 dark:bg-slate-900 px-2 text-sm text-slate-500 font-medium">每日任務</span>
+                    <span class="bg-slate-50 dark:bg-slate-900 px-2 text-sm md:text-base text-slate-500 font-medium">每日任務</span>
                 </div>
             </div>
 
-            <button id="daily-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-lg shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 relative overflow-hidden group">
+            <button id="daily-btn" class="w-full py-4 md:py-6 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-lg md:text-2xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 relative overflow-hidden group">
                 <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <svg class="w-5 h-5 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 <span>每日挑戰</span>
-                <div id="daily-completed-badge" class="hidden absolute right-3 top-1/2 -translate-y-1/2 bg-white text-green-600 rounded-full p-1 shadow animate-bounce">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <div id="daily-completed-badge" class="hidden absolute right-3 md:right-5 top-1/2 -translate-y-1/2 bg-white text-green-600 rounded-full p-1 shadow animate-bounce">
+                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                 </div>
             </button>
         </div>
 
-        <div class="mt-8 flex gap-6">
-            <button id="menu-theme-toggle" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition" title="切換主題">
-                <svg class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                <svg class="w-6 h-6 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 24.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        <div class="mt-8 md:mt-12 flex gap-6 md:gap-10">
+            <button id="menu-theme-toggle" class="p-2 md:p-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition" title="切換主題">
+                <svg class="w-6 h-6 md:w-8 md:h-8 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg class="w-6 h-6 md:w-8 md:h-8 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 24.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
             </button>
-             <button id="menu-stats-btn" class="p-2 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition" title="查看紀錄">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path></svg>
+             <button id="menu-stats-btn" class="p-2 md:p-3 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition" title="查看紀錄">
+                <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path></svg>
             </button>
         </div>
     </div>
 
-    <!-- Game Screen -->
-    <div id="game-screen" class="hidden flex-col h-screen w-full bg-slate-50 dark:bg-slate-950 pt-safe-top pb-safe-bottom">
-        <!-- Navbar -->
-        <header class="w-full bg-white dark:bg-slate-900 shadow-sm p-3 flex justify-between items-center z-10 shrink-0 border-b border-slate-100 dark:border-slate-800">
-            <button id="back-to-menu" class="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+    <!-- Game Screen (Optimized for Landscape) -->
+    <div id="game-screen" class="hidden h-screen w-full bg-slate-50 dark:bg-slate-950 pt-safe-top pb-safe-bottom pl-safe-left pr-safe-right flex-col">
+        
+        <!-- Navbar (Sticky Top) -->
+        <header class="w-full bg-white dark:bg-slate-900 shadow-sm p-3 md:p-4 flex justify-between items-center z-10 shrink-0 border-b border-slate-100 dark:border-slate-800">
+            <button id="back-to-menu" class="p-2 -ml-2 md:ml-0 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
+                <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </button>
             <div class="flex flex-col items-center">
-                <h1 class="text-lg font-bold tracking-tight text-slate-800 dark:text-white" id="game-title">Web Sudoku</h1>
-                <div class="flex items-center gap-2 mt-0.5">
-                    <span id="game-difficulty-badge" class="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">EASY</span>
-                    <div id="mistake-counter" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center gap-1 transition-colors">
+                <h1 class="text-lg md:text-2xl font-bold tracking-tight text-slate-800 dark:text-white" id="game-title">Web Sudoku</h1>
+                <div class="flex items-center gap-2 mt-0.5 md:mt-1">
+                    <span id="game-difficulty-badge" class="text-[10px] md:text-xs uppercase tracking-wider font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">EASY</span>
+                    <div id="mistake-counter" class="text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 px-2 py-0.5 md:px-3 md:py-1 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center gap-1 transition-colors">
                         錯誤: <span id="mistake-val">0</span>/3
                     </div>
                 </div>
             </div>
-            <div class="w-10"></div> <!-- Spacer for balance -->
+            <div class="w-10 md:w-14"></div>
         </header>
 
-        <main class="flex-grow flex flex-col items-center justify-start pt-4 pb-2 px-4 gap-2 w-full max-w-lg mx-auto overflow-y-auto">
+        <!-- Main Content: Auto switch to row layout on landscape/large screens -->
+        <main class="flex-grow w-full h-full overflow-hidden flex flex-col md:flex-row items-center justify-center p-4 gap-6 md:gap-12">
             
-            <!-- Controls: Timer -->
-            <div class="w-full flex justify-between items-center text-sm">
-                <div class="flex items-center gap-4 bg-white dark:bg-slate-800 px-4 py-1.5 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
-                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <div class="font-mono text-lg font-bold text-slate-700 dark:text-slate-200 min-w-[3.5rem] text-center" id="timer">00:00</div>
-                </div>
-                
-                <button id="pause-btn" class="p-2 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-sm border border-slate-100 dark:border-slate-700">
-                    <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
-                </button>
-            </div>
-
-            <!-- Game Board Area -->
-            <div class="relative w-full aspect-square shadow-xl rounded-lg overflow-hidden border-2 border-slate-800 dark:border-slate-600 bg-white dark:bg-slate-900 select-none">
+            <!-- Board Area (Scales with height in landscape) -->
+            <div class="relative w-full aspect-square max-w-lg md:max-w-none md:h-full md:w-auto shadow-xl rounded-lg overflow-hidden border-2 border-slate-800 dark:border-slate-600 bg-white dark:bg-slate-900 select-none shrink-0">
                 <!-- Loading Overlay -->
                 <div id="loading-overlay" class="absolute inset-0 bg-white/95 dark:bg-slate-900/95 z-20 flex items-center justify-center hidden">
                     <div class="flex flex-col items-center gap-3">
@@ -271,34 +246,49 @@
                 </div>
             </div>
 
-            <!-- Action Bar -->
-            <div class="w-full flex justify-between items-center px-4 py-1">
-                <button id="undo-btn" class="action-btn flex flex-col items-center gap-1 text-slate-500 hover:text-brand-600 transition">
-                    <div class="icon-container p-3 rounded-full bg-white dark:bg-slate-800 shadow border border-slate-200 dark:border-slate-700">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
-                    </div>
-                    <span class="text-[10px] font-medium mt-1">復原</span>
-                </button>
+            <!-- Controls Sidebar (Right side on landscape) -->
+            <div class="flex flex-col w-full max-w-lg md:w-auto md:h-full md:justify-center gap-4 md:gap-8 shrink-0">
                 
-                <button id="erase-btn" class="action-btn flex flex-col items-center gap-1 text-slate-500 hover:text-brand-600 transition">
-                    <div class="icon-container p-3 rounded-full bg-white dark:bg-slate-800 shadow border border-slate-200 dark:border-slate-700">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <!-- Top Controls: Timer & Pause -->
+                <div class="w-full flex justify-between items-center text-sm md:text-base">
+                    <div class="flex items-center gap-4 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm border border-slate-100 dark:border-slate-700 w-full justify-center">
+                        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <div class="font-mono text-2xl font-bold text-slate-700 dark:text-slate-200" id="timer">00:00</div>
                     </div>
-                    <span class="text-[10px] font-medium mt-1">清除</span>
-                </button>
+                    <button id="pause-btn" class="ml-4 p-3 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-sm border border-slate-100 dark:border-slate-700">
+                        <svg class="w-6 h-6 text-slate-600 dark:text-slate-300" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
+                    </button>
+                </div>
 
-                <button id="note-mode-btn" class="action-btn flex flex-col items-center gap-1 text-slate-500 transition group">
-                    <div class="icon-container relative p-3 rounded-full bg-white dark:bg-slate-800 shadow border border-slate-200 dark:border-slate-700 group-[.active]:bg-brand-600 group-[.active]:text-white group-[.active]:border-brand-600 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        <div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-brand-500 rounded-full border-2 border-white dark:border-slate-800 hidden group-[.active]:block"></div>
-                    </div>
-                    <span class="text-[10px] font-medium mt-1 group-[.active]:text-brand-600 dark:group-[.active]:text-brand-400">筆記</span>
-                </button>
-            </div>
+                <!-- Action Buttons -->
+                <div class="flex justify-between items-center gap-2">
+                    <button id="undo-btn" class="action-btn flex-1 flex flex-col items-center gap-1 text-slate-500 hover:text-brand-600 transition py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <div class="p-2 rounded-full bg-white dark:bg-slate-800 shadow border border-slate-200 dark:border-slate-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                        </div>
+                        <span class="text-xs font-medium">復原</span>
+                    </button>
+                    
+                    <button id="erase-btn" class="action-btn flex-1 flex flex-col items-center gap-1 text-slate-500 hover:text-brand-600 transition py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <div class="p-2 rounded-full bg-white dark:bg-slate-800 shadow border border-slate-200 dark:border-slate-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </div>
+                        <span class="text-xs font-medium">清除</span>
+                    </button>
 
-            <!-- Number Pad -->
-            <div class="w-full grid grid-cols-9 gap-1.5 mt-auto shrink-0 pb-safe-bottom">
-                <!-- Numbers 1-9 generated by JS -->
+                    <button id="note-mode-btn" class="action-btn flex-1 flex flex-col items-center gap-1 text-slate-500 transition group py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <div class="relative p-2 rounded-full bg-white dark:bg-slate-800 shadow border border-slate-200 dark:border-slate-700 group-[.active]:bg-brand-600 group-[.active]:text-white group-[.active]:border-brand-600 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            <div class="absolute -top-1 -right-1 w-3 h-3 bg-brand-500 rounded-full border-2 border-white dark:border-slate-800 hidden group-[.active]:block"></div>
+                        </div>
+                        <span class="text-xs font-medium group-[.active]:text-brand-600 dark:group-[.active]:text-brand-400">筆記</span>
+                    </button>
+                </div>
+
+                <!-- Number Pad: 9x1 on Mobile, 3x3 on Landscape/Tablet -->
+                <div class="w-full grid grid-cols-9 md:grid-cols-3 gap-1.5 md:gap-3">
+                    <!-- Numbers 1-9 generated by JS -->
+                </div>
             </div>
 
         </main>
@@ -306,24 +296,24 @@
 
     <!-- Victory Modal -->
     <div id="victory-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-md">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center animate-bounce-in border border-slate-200 dark:border-slate-700">
-            <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 relative">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm md:max-w-lg p-8 md:p-12 text-center animate-bounce-in border border-slate-200 dark:border-slate-700">
+            <div class="w-20 h-20 md:w-28 md:h-28 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 relative">
                 <div class="absolute inset-0 rounded-full bg-green-200 dark:bg-green-500/20 animate-ping opacity-75"></div>
-                <svg class="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                <svg class="w-10 h-10 md:w-14 md:h-14 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
             </div>
-            <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white mb-2">恭喜通關！</h2>
-            <div class="flex justify-center gap-4 mb-8 text-sm">
-                 <div class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                    <span class="text-slate-500 dark:text-slate-400">難度</span>
-                    <div id="victory-difficulty" class="font-bold text-slate-800 dark:text-white"></div>
+            <h2 class="text-3xl md:text-5xl font-extrabold text-slate-800 dark:text-white mb-2 md:mb-4">恭喜通關！</h2>
+            <div class="flex justify-center gap-4 md:gap-8 mb-8 md:mb-12 text-sm md:text-lg">
+                 <div class="px-3 py-1 md:px-5 md:py-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                    <span class="text-slate-500 dark:text-slate-400 block mb-1">難度</span>
+                    <div id="victory-difficulty" class="font-bold text-slate-800 dark:text-white text-base md:text-xl"></div>
                  </div>
-                 <div class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                    <span class="text-slate-500 dark:text-slate-400">耗時</span>
-                    <div id="victory-time" class="font-bold text-brand-600 dark:text-brand-400"></div>
+                 <div class="px-3 py-1 md:px-5 md:py-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                    <span class="text-slate-500 dark:text-slate-400 block mb-1">耗時</span>
+                    <div id="victory-time" class="font-bold text-brand-600 dark:text-brand-400 text-base md:text-xl"></div>
                  </div>
             </div>
             
-            <button id="victory-confirm-btn" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white rounded-xl font-bold shadow-lg transition transform active:scale-95 text-lg">
+            <button id="victory-confirm-btn" class="w-full py-3.5 md:py-5 bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white rounded-xl font-bold shadow-lg transition transform active:scale-95 text-lg md:text-2xl">
                 返回主選單
             </button>
         </div>
@@ -331,14 +321,14 @@
 
     <!-- Game Over Modal -->
     <div id="game-over-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-md">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center animate-bounce-in border border-slate-200 dark:border-slate-700">
-            <div class="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-10 h-10 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm md:max-w-lg p-8 md:p-12 text-center animate-bounce-in border border-slate-200 dark:border-slate-700">
+            <div class="w-20 h-20 md:w-28 md:h-28 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
+                <svg class="w-10 h-10 md:w-14 md:h-14 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
             </div>
-            <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white mb-2">遊戲結束</h2>
-            <p class="text-slate-500 dark:text-slate-400 mb-8">錯誤次數已達上限，再接再厲！</p>
+            <h2 class="text-3xl md:text-5xl font-extrabold text-slate-800 dark:text-white mb-2 md:mb-4">遊戲結束</h2>
+            <p class="text-slate-500 dark:text-slate-400 mb-8 md:mb-12 text-base md:text-xl">錯誤次數已達上限，再接再厲！</p>
             
-            <button id="game-over-confirm-btn" class="w-full py-3.5 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-bold shadow-lg transition transform active:scale-95 text-lg">
+            <button id="game-over-confirm-btn" class="w-full py-3.5 md:py-5 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-bold shadow-lg transition transform active:scale-95 text-lg md:text-2xl">
                 返回主選單
             </button>
         </div>
@@ -346,34 +336,34 @@
 
     <!-- Stats Modal -->
     <div id="stats-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-100 border dark:border-slate-700 pt-safe-top pb-safe-bottom">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-slate-800 dark:text-white">遊戲紀錄</h3>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md md:max-w-xl p-6 md:p-8 transform transition-all scale-100 border dark:border-slate-700 pt-safe-top pb-safe-bottom">
+            <div class="flex justify-between items-center mb-6 md:mb-8">
+                <h3 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">遊戲紀錄</h3>
                 <button id="close-stats" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
             
-            <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="text-center p-4 bg-slate-50 dark:bg-slate-700 rounded-xl">
-                        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">總通關數</div>
-                        <div class="text-2xl font-extrabold text-brand-600 dark:text-brand-400 mt-1" id="stat-total">0</div>
+            <div class="space-y-4 md:space-y-6">
+                <div class="grid grid-cols-2 gap-4 md:gap-6 mb-6">
+                    <div class="text-center p-4 md:p-6 bg-slate-50 dark:bg-slate-700 rounded-xl">
+                        <div class="text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">總通關數</div>
+                        <div class="text-2xl md:text-4xl font-extrabold text-brand-600 dark:text-brand-400 mt-1 md:mt-2" id="stat-total">0</div>
                     </div>
-                     <div class="text-center p-4 bg-gradient-to-br from-indigo-50 to-pink-50 dark:from-indigo-900/20 dark:to-pink-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
-                        <div class="text-xs font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-wide">每日連勝</div>
-                        <div class="text-2xl font-extrabold text-indigo-600 dark:text-indigo-300 mt-1" id="stat-daily-streak">0</div>
+                     <div class="text-center p-4 md:p-6 bg-gradient-to-br from-indigo-50 to-pink-50 dark:from-indigo-900/20 dark:to-pink-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                        <div class="text-xs md:text-sm font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-wide">每日連勝</div>
+                        <div class="text-2xl md:text-4xl font-extrabold text-indigo-600 dark:text-indigo-300 mt-1 md:mt-2" id="stat-daily-streak">0</div>
                     </div>
                 </div>
 
-                <h4 class="font-semibold text-slate-700 dark:text-slate-300 border-b pb-2 dark:border-slate-700 text-sm">最近紀錄</h4>
-                <ul id="history-list" class="space-y-2 text-xs md:text-sm max-h-48 overflow-y-auto pr-1">
+                <h4 class="font-semibold text-slate-700 dark:text-slate-300 border-b pb-2 dark:border-slate-700 text-sm md:text-lg">最近紀錄</h4>
+                <ul id="history-list" class="space-y-2 md:space-y-3 text-xs md:text-base max-h-48 md:max-h-64 overflow-y-auto pr-1">
                     <!-- History items -->
                 </ul>
             </div>
             
-            <div class="mt-6 text-center">
-                 <button id="clear-stats" class="text-xs text-red-400 hover:text-red-600 dark:hover:text-red-300 underline transition">清除所有紀錄</button>
+            <div class="mt-6 md:mt-8 text-center">
+                 <button id="clear-stats" class="text-xs md:text-sm text-red-400 hover:text-red-600 dark:hover:text-red-300 underline transition">清除所有紀錄</button>
             </div>
         </div>
     </div>
@@ -414,7 +404,7 @@
                     menuScreen: document.getElementById('menu-screen'),
                     gameScreen: document.getElementById('game-screen'),
                     grid: document.getElementById('sudoku-grid'),
-                    numPad: document.querySelector('.grid.grid-cols-9.gap-1\\.5.mt-auto'),
+                    numPad: document.querySelector('.grid.grid-cols-9.md\\:grid-cols-3'), // Selector updated for new grid layout
                     timer: document.getElementById('timer'),
                     gameTitle: document.getElementById('game-title'),
                     difficultyBadge: document.getElementById('game-difficulty-badge'),
@@ -450,7 +440,6 @@
                 this.generateNumberPad();
                 this.checkDailyStatus();
                 
-                // 檢測是否在 standalone 模式下運行
                 if (window.navigator.standalone) {
                     document.body.classList.add('standalone-mode');
                 }
@@ -467,7 +456,6 @@
                 this.stopTimer();
                 this.checkDailyStatus();
                 
-                // Explicitly hide modals via classes AND remove inline style (Critical Fix)
                 this.elements.victoryModal.classList.add('hidden');
                 this.elements.victoryModal.style.removeProperty('display');
                 
@@ -505,7 +493,7 @@
                 this.elements.difficultyBadge.textContent = this.difficultyLabels[difficulty === 'daily' ? this.currentDifficulty : difficulty];
                 
                 const colors = { 'easy': 'text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400', 'medium': 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-400', 'hard': 'text-orange-600 bg-orange-50 dark:bg-orange-900/30 dark:text-orange-400', 'expert': 'text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400' };
-                this.elements.difficultyBadge.className = `text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${colors[this.currentDifficulty]}`;
+                this.elements.difficultyBadge.className = `text-[10px] md:text-xs uppercase tracking-wider font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-full ${colors[this.currentDifficulty]}`;
 
                 this.elements.loadingOverlay.classList.remove('hidden');
                 setTimeout(() => {
@@ -524,7 +512,7 @@
                 this.historyStack = [];
                 this.selectedCell = null;
                 this.timer = 0;
-                this.mistakes = 0; // Reset mistakes
+                this.mistakes = 0; 
                 this.updateMistakesDisplay();
                 this.isNoteMode = false;
                 this.elements.noteModeBtn.classList.remove('active');
@@ -642,7 +630,7 @@
                 for (let r = 0; r < 9; r++) {
                     for (let c = 0; c < 9; c++) {
                         const cell = document.createElement('div');
-                        cell.className = 'sudoku-cell flex items-center justify-center text-xl md:text-2xl relative';
+                        cell.className = 'sudoku-cell flex items-center justify-center text-xl md:text-3xl lg:text-4xl relative';
                         cell.dataset.row = r;
                         cell.dataset.col = c;
                         this.updateCellVisuals(cell, r, c);
@@ -666,7 +654,7 @@
                 const isSelected = this.selectedCell && this.selectedCell.r === r && this.selectedCell.c === c;
                 
                 cell.innerHTML = ''; 
-                cell.className = 'sudoku-cell flex items-center justify-center text-xl md:text-2xl relative transition-colors duration-75 ';
+                cell.className = 'sudoku-cell flex items-center justify-center text-xl md:text-3xl lg:text-4xl relative transition-colors duration-75 ';
                 
                 let bgClass = '';
                 
@@ -717,7 +705,7 @@
                 for (let i = 1; i <= 9; i++) {
                     const btn = document.createElement('button');
                     btn.textContent = i;
-                    btn.className = 'numpad-btn h-12 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-b-4 border-slate-200 dark:border-slate-700 font-bold text-xl text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-slate-700 active:border-b-0 active:translate-y-0.5 transition-all';
+                    btn.className = 'numpad-btn h-12 md:h-14 lg:h-20 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-b-4 border-slate-200 dark:border-slate-700 font-bold text-xl md:text-3xl text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-slate-700 active:border-b-0 active:translate-y-0.5 transition-all';
                     btn.onclick = () => this.handleNumberInput(i);
                     this.elements.numPad.appendChild(btn);
                 }
@@ -830,7 +818,6 @@
                     if (num === 0) {
                         this.board[r][c] = 0;
                     } else {
-                        // Check Mistake Logic
                         if (num !== this.solution[r][c]) {
                             this.mistakes++;
                             this.updateMistakesDisplay();
@@ -838,7 +825,7 @@
                             setTimeout(() => this.elements.mistakeCounter.classList.remove('animate-shake'), 500);
                             
                             if (this.mistakes >= this.maxMistakes) {
-                                this.board[r][c] = num; // Show the mistake before game over
+                                this.board[r][c] = num; 
                                 this.updateBoardVisualsOnly();
                                 this.gameOver();
                                 return;
@@ -848,11 +835,9 @@
                         this.board[r][c] = num;
                         this.notes[r][c].clear();
                     }
-                    // Visual update first, then check win
                     this.updateBoardVisualsOnly();
                     this.updateNumberPadStatus();
                     
-                    // Delay slightly to allow UI to paint
                     setTimeout(() => this.checkWinCondition(), 10);
                     return; 
                 }
@@ -863,7 +848,7 @@
             gameOver() {
                 this.stopTimer();
                 this.elements.gameOverModal.classList.remove('hidden');
-                this.elements.gameOverModal.style.display = 'flex'; // Ensure flex for centering
+                this.elements.gameOverModal.style.display = 'flex'; 
             }
 
             saveStateToHistory() {
@@ -961,7 +946,7 @@
                 document.getElementById('victory-time').textContent = `${mins}:${secs}`;
                 
                 this.elements.victoryModal.classList.remove('hidden');
-                this.elements.victoryModal.style.display = 'flex'; // Ensure flex for centering
+                this.elements.victoryModal.style.display = 'flex'; 
             }
 
             showStats() {
@@ -989,7 +974,7 @@
                     const date = `${dateObj.getMonth()+1}/${dateObj.getDate()}`;
                     const mins = Math.floor(rec.time/60).toString().padStart(2,'0');
                     const secs = (rec.time%60).toString().padStart(2,'0');
-                    li.innerHTML = `<span class="text-slate-600 dark:text-slate-300 font-medium">${date} <span class="text-[10px] text-slate-400 font-normal">(${this.difficultyLabels[rec.difficulty] || rec.difficulty})</span></span><span class="font-mono font-bold text-brand-600 dark:text-brand-400">${mins}:${secs}</span>`;
+                    li.innerHTML = `<span class="text-slate-600 dark:text-slate-300 font-medium text-xs md:text-sm">${date} <span class="text-[10px] md:text-xs text-slate-400 font-normal">(${this.difficultyLabels[rec.difficulty] || rec.difficulty})</span></span><span class="font-mono font-bold text-brand-600 dark:text-brand-400 text-sm md:text-base">${mins}:${secs}</span>`;
                     list.appendChild(li);
                 });
                 this.elements.statsModal.classList.remove('hidden');
