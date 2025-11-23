@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport 設定：加入 viewport-fit=cover 以適配全螢幕 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- iOS Web App 設定 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="數獨大師">
+    
+    <!-- Android / Desktop Web App 設定 -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffffff">
+
+    <title>數獨大師 Sudoku</title>
+
+    <!-- 內嵌 Manifest (讓瀏覽器識別為 App) -->
+    <link rel="manifest" href='data:application/manifest+json;base64,ewogICJuYW1lIjogIuZWuOeNqOWkp+W4qyIsCiAgInNob3J0X25hbWUiOiAi5pW4542oIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJ0aGVtZV9jb2xvciI6ICIjMGVhNWU5IiwKICAiaWNvbnMiOiBbXQp9'>
+
+    <!-- 內嵌 Apple Touch Icon (簡單的 SVG 圖標) -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' style='background:%230ea5e9'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='300' fill='white' font-family='sans-serif' font-weight='bold'%3E9%3C/text%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' style='background:%230ea5e9'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='300' fill='white' font-family='sans-serif' font-weight='bold'%3E9%3C/text%3E%3C/svg%3E">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    animation: {
+                        'bounce-in': 'bounceIn 0.5s cubic-bezier(0.8, 0, 0.2, 1)',
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both'
+                    },
+                    keyframes: {
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.3)', opacity: '0' },
+                            '50%': { transform: 'scale(1.05)' },
+                            '70%': { transform: 'scale(0.9)' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        shake: {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+                        }
+                    },
+                    // 增加安全區域 padding
+                    spacing: {
+                        'safe-top': 'env(safe-area-inset-top)',
+                        'safe-bottom': 'env(safe-area-inset-bottom)',
+                        'safe-left': 'env(safe-area-inset-left)',
+                        'safe-right': 'env(safe-area-inset-right)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 防止 iOS 點擊高亮與縮放行為 */
+        html {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        /* 網格邊框樣式 */
+        .sudoku-cell {
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            user-select: none;
+            -webkit-user-select: none; /* iOS Safari */
+            cursor: pointer;
+            transition: all 0.1s ease-in-out;
+        }
+        /* 區塊加粗 */
+        .sudoku-cell:nth-child(n+19):nth-child(-n+27),
+        .sudoku-cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 2px solid #475569;
+        }
+        .sudoku-cell:nth-child(9n+3),
+        .sudoku-cell:nth-child(9n+6) {
+            border-right: 2px solid #475569;
+        }
+        .sudoku-cell:nth-child(9n) { border-right: none; }
+        .sudoku-cell:nth-child(n+73) { border-bottom: none; }
+
+        /* 隱藏卷軸 */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        /* 筆記網格 */
+        .note-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .note-num {
+            font-size: 8px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+        }
+        
+        @media (min-width: 640px) { .note-num { font-size: 10px; } }
+
+        /* Dark Mode 邊框調整 */
+        .dark .sudoku-cell { border-color: #334155; }
+        .dark .sudoku-cell:nth-child(n+19):nth-child(-n+27),
+        .dark .sudoku-cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #94a3b8; }
+        .dark .sudoku-cell:nth-child(9n+3),
+        .dark .sudoku-cell:nth-child(9n+6) { border-right: 2px solid #94a3b8; }
+        .dark .note-num { color: #94a3b8; }
+
+        /* 數字鍵盤完成狀態 */
+        .numpad-btn.completed {
+            opacity: 0.2;
+            pointer-events: none;
+            filter: grayscale(100%);
+        }
+
+        /* iPad Standalone 優化 */
+        body.standalone-mode {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200 overflow-hidden pt-safe-top pb-safe-bottom pl-safe-left pr-safe-right">
+
+    <!-- Menu Screen -->
+    <div id="menu-screen" class="fixed inset-0 z-40 bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-4 animate-fade-in pt-safe-top pb-safe-bottom">
+        <div class="mb-8 text-center">
+            <div class="inline-block p-4 bg-brand-100 dark:bg-slate-800 rounded-2xl mb-4 shadow-lg transform rotate-3 hover:rotate-6 transition">
+                <svg class="w-16 h-16 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+            </div>
+            <h1 class="text-4xl font-extrabold text-slate-800 dark:text-white tracking-tight">數獨 Sudoku</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">鍛鍊邏輯思維</p>
+        </div>
+
+        <div class="w-full max-w-xs space-y-3">
+            <button class="menu-btn w-full py-3.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600 dark:hover:border-brand-400 dark:hover:text-brand-400 font-bold text-lg shadow-sm transition active:scale-95 flex items-center justify-between px-6 group" data-mode="easy">
+                <span class="group-hover:translate-x-1 transition-transform">簡單</span>
+                <span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">入門</span>
+            </button>
+            <button class="menu-btn w-full py-3.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600 dark:hover:border-brand-400 dark:hover:text-brand-400 font-bold text-lg shadow-sm transition active:scale-95 flex items-center justify-between px-6 group" data-mode="medium">
+                <span class="group-hover:translate-x-1 transition-transform">中等</span>
+                <span class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-0.5 rounded-full">進階</span>
+            </button>
+            <button class="menu-btn w-full py-3.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600 dark:hover:border-brand-400 dark:hover:text-brand-400 font-bold text-lg shadow-sm transition active:scale-95 flex items-center justify-between px-6 group" data-mode="hard">
+                <span class="group-hover:translate-x-1 transition-transform">困難</span>
+                <span class="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 py-0.5 rounded-full">燒腦</span>
+            </button>
+            <button class="menu-btn w-full py-3.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-red-500 hover:text-red-600 dark:hover:border-red-400 dark:hover:text-red-400 font-bold text-lg shadow-sm transition active:scale-95 flex items-center justify-between px-6 group" data-mode="expert">
+                <span class="group-hover:translate-x-1 transition-transform">專家</span>
+                <span class="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-full">極限</span>
+            </button>
+            
+            <div class="relative pt-4">
+                <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                    <div class="w-full border-t border-slate-300 dark:border-slate-700"></div>
+                </div>
+                <div class="relative flex justify-center">
+                    <span class="bg-slate-50 dark:bg-slate-900 px-2 text-sm text-slate-500 font-medium">每日任務</span>
+                </div>
+            </div>
+
+            <button id="daily-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-lg shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span>每日挑戰</span>
+                <div id="daily-completed-badge" class="hidden absolute right-3 top-1/2 -translate-y-1/2 bg-white text-green-600 rounded-full p-1 shadow animate-bounce">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+            </button>
+        </div>
+
+        <div class="mt-8 flex gap-6">
+            <button id="menu-theme-toggle" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition" title="切換主題">
+                <svg class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg class="w-6 h-6 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 24.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+             <button id="menu-stats-btn" class="p-2 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition" title="查看紀錄">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="hidden flex-col h-screen w-full bg-slate-50 dark:bg-slate-950 pt-safe-top pb-safe-bottom">
+        <!-- Navbar -->
+        <header class="w-full bg-white dark:bg-slate-900 shadow-sm p-3 flex justify-between items-center z-10 shrink-0 border-b border-slate-100 dark:border-slate-800">
+            <button id="back-to-menu" class="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </button>
+            <div class="flex flex-col items-center">
+                <h1 class="text-lg font-bold tracking-tight text-slate-800 dark:text-white" id="game-title">Web Sudoku</h1>
+                <div class="flex items-center gap-2 mt-0.5">
+                    <span id="game-difficulty-badge" class="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">EASY</span>
+                    <div id="mistake-counter" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center gap-1 transition-colors">
+                        錯誤: <span id="mistake-val">0</span>/3
+                    </div>
+                </div>
+            </div>
+            <div class="w-10"></div> <!-- Spacer for balance -->
+        </header>
+
+        <main class="flex-grow flex flex-col items-center justify-start pt-4 pb-2 px-4 gap-2 w-full max-w-lg mx-auto overflow-y-auto">
+            
+            <!-- Controls: Timer -->
+            <div class="w-full flex justify-between items-center text-sm">
+                <div class="flex items-center gap-4 bg-white dark:bg-slate-800 px-4 py-1.5 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div class="font-mono text-lg font-bold text-slate-700 dark:text-slate-200 min-w-[3.5rem] text-center" id="timer">00:00</div>
+                </div>
+                
+                <button id="pause-btn" class="p-2 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-sm border border-slate-100 dark:border-slate-700">
+                    <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
+                </button>
+            </div>
+
+            <!-- Game Board Area -->
+            <div class="relative w-full aspect-square shadow-xl rounded-lg overflow-hidden border-2 border-slate-800 dark:border-slate-600 bg-white dark:bg-slate-900 select-none">
+                <!-- Loading Overlay -->
+                <div id="loading-overlay" class="absolute inset-0 bg-white/95 dark:bg-slate-900/95 z-20 flex items-center justify-center hidden">
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600"></div>
+                        <span class="text-sm font-medium text-slate-500">生成謎題中...</span>
+                    </div>
+                </div>
+
+                <!-- Pause Overlay -->
+                <div id="pause-overlay" class="absolute inset-0 bg-slate-900/90 z-10 flex flex-col items-center justify-center text-white hidden backdrop-blur-sm">
+                    <h2 class="text-3xl font-bold mb-6">遊戲暫停</h2>
+                    <button id="resume-btn" class="px-8 py-3 bg-brand-600 rounded-full hover:bg-brand-500 font-semibold shadow-lg transform transition active:scale-95 text-lg">繼續遊戲</button>
+                </div>
+
+                <!-- The Grid -->
+                <div id="sudoku-grid" class="w-full h-full grid grid-cols-9 grid-rows-9">
+                    <!-- Cells generated by JS -->
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="w-full flex justify-between items-center px-4 py-1">
+                <button id="undo-btn" class="action-btn flex flex-col items-center gap-1 text-slate-500 hover:text-brand-600 transition">
+                    <div class="icon-container p-3 rounded-full bg-white dark:bg-slate-800 shadow border border-slate-200 dark:border-slate-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                    </div>
+                    <span class="text-[10px] font-medium mt-1">復原</span>
+                </button>
+                
+                <button id="erase-btn" class="action-btn flex flex-col items-center gap-1 text-slate-500 hover:text-brand-600 transition">
+                    <div class="icon-container p-3 rounded-full bg-white dark:bg-slate-800 shadow border border-slate-200 dark:border-slate-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </div>
+                    <span class="text-[10px] font-medium mt-1">清除</span>
+                </button>
+
+                <button id="note-mode-btn" class="action-btn flex flex-col items-center gap-1 text-slate-500 transition group">
+                    <div class="icon-container relative p-3 rounded-full bg-white dark:bg-slate-800 shadow border border-slate-200 dark:border-slate-700 group-[.active]:bg-brand-600 group-[.active]:text-white group-[.active]:border-brand-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        <div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-brand-500 rounded-full border-2 border-white dark:border-slate-800 hidden group-[.active]:block"></div>
+                    </div>
+                    <span class="text-[10px] font-medium mt-1 group-[.active]:text-brand-600 dark:group-[.active]:text-brand-400">筆記</span>
+                </button>
+            </div>
+
+            <!-- Number Pad -->
+            <div class="w-full grid grid-cols-9 gap-1.5 mt-auto shrink-0 pb-safe-bottom">
+                <!-- Numbers 1-9 generated by JS -->
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center animate-bounce-in border border-slate-200 dark:border-slate-700">
+            <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 relative">
+                <div class="absolute inset-0 rounded-full bg-green-200 dark:bg-green-500/20 animate-ping opacity-75"></div>
+                <svg class="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white mb-2">恭喜通關！</h2>
+            <div class="flex justify-center gap-4 mb-8 text-sm">
+                 <div class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                    <span class="text-slate-500 dark:text-slate-400">難度</span>
+                    <div id="victory-difficulty" class="font-bold text-slate-800 dark:text-white"></div>
+                 </div>
+                 <div class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                    <span class="text-slate-500 dark:text-slate-400">耗時</span>
+                    <div id="victory-time" class="font-bold text-brand-600 dark:text-brand-400"></div>
+                 </div>
+            </div>
+            
+            <button id="victory-confirm-btn" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white rounded-xl font-bold shadow-lg transition transform active:scale-95 text-lg">
+                返回主選單
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center animate-bounce-in border border-slate-200 dark:border-slate-700">
+            <div class="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white mb-2">遊戲結束</h2>
+            <p class="text-slate-500 dark:text-slate-400 mb-8">錯誤次數已達上限，再接再厲！</p>
+            
+            <button id="game-over-confirm-btn" class="w-full py-3.5 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-bold shadow-lg transition transform active:scale-95 text-lg">
+                返回主選單
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="stats-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all scale-100 border dark:border-slate-700 pt-safe-top pb-safe-bottom">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-slate-800 dark:text-white">遊戲紀錄</h3>
+                <button id="close-stats" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="text-center p-4 bg-slate-50 dark:bg-slate-700 rounded-xl">
+                        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">總通關數</div>
+                        <div class="text-2xl font-extrabold text-brand-600 dark:text-brand-400 mt-1" id="stat-total">0</div>
+                    </div>
+                     <div class="text-center p-4 bg-gradient-to-br from-indigo-50 to-pink-50 dark:from-indigo-900/20 dark:to-pink-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                        <div class="text-xs font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-wide">每日連勝</div>
+                        <div class="text-2xl font-extrabold text-indigo-600 dark:text-indigo-300 mt-1" id="stat-daily-streak">0</div>
+                    </div>
+                </div>
+
+                <h4 class="font-semibold text-slate-700 dark:text-slate-300 border-b pb-2 dark:border-slate-700 text-sm">最近紀錄</h4>
+                <ul id="history-list" class="space-y-2 text-xs md:text-sm max-h-48 overflow-y-auto pr-1">
+                    <!-- History items -->
+                </ul>
+            </div>
+            
+            <div class="mt-6 text-center">
+                 <button id="clear-stats" class="text-xs text-red-400 hover:text-red-600 dark:hover:text-red-300 underline transition">清除所有紀錄</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SeededRandom {
+            constructor(seed) { this.seed = seed; }
+            next() {
+                this.seed = (this.seed * 9301 + 49297) % 233280;
+                return this.seed / 233280;
+            }
+        }
+
+        class SudokuApp {
+            constructor() {
+                this.board = []; this.solution = []; this.initial = [];
+                this.notes = []; this.historyStack = [];
+                this.selectedCell = null;
+                this.timer = 0; this.timerInterval = null;
+                this.isRunning = false; this.isNoteMode = false;
+                this.currentDifficulty = 'easy'; this.isDailyChallenge = false;
+                this.randomGenerator = { next: () => Math.random() };
+                
+                // Mistake System
+                this.mistakes = 0;
+                this.maxMistakes = 3;
+
+                this.difficultyMap = {
+                    'easy': 38, 'medium': 30, 'hard': 25, 'expert': 22
+                };
+                
+                this.difficultyLabels = {
+                    'easy': '簡單', 'medium': '中等', 'hard': '困難', 'expert': '專家', 'daily': '每日挑戰'
+                };
+
+                // DOM Cache
+                this.elements = {
+                    menuScreen: document.getElementById('menu-screen'),
+                    gameScreen: document.getElementById('game-screen'),
+                    grid: document.getElementById('sudoku-grid'),
+                    numPad: document.querySelector('.grid.grid-cols-9.gap-1\\.5.mt-auto'),
+                    timer: document.getElementById('timer'),
+                    gameTitle: document.getElementById('game-title'),
+                    difficultyBadge: document.getElementById('game-difficulty-badge'),
+                    loadingOverlay: document.getElementById('loading-overlay'),
+                    pauseOverlay: document.getElementById('pause-overlay'),
+                    pauseBtn: document.getElementById('pause-btn'),
+                    resumeBtn: document.getElementById('resume-btn'),
+                    backToMenuBtn: document.getElementById('back-to-menu'),
+                    noteModeBtn: document.getElementById('note-mode-btn'),
+                    eraseBtn: document.getElementById('erase-btn'),
+                    undoBtn: document.getElementById('undo-btn'),
+                    victoryModal: document.getElementById('victory-modal'),
+                    victoryConfirmBtn: document.getElementById('victory-confirm-btn'),
+                    gameOverModal: document.getElementById('game-over-modal'),
+                    gameOverConfirmBtn: document.getElementById('game-over-confirm-btn'),
+                    statsModal: document.getElementById('stats-modal'),
+                    menuStatsBtn: document.getElementById('menu-stats-btn'),
+                    closeStats: document.getElementById('close-stats'),
+                    clearStats: document.getElementById('clear-stats'),
+                    menuThemeToggle: document.getElementById('menu-theme-toggle'),
+                    dailyBtn: document.getElementById('daily-btn'),
+                    dailyBadge: document.getElementById('daily-completed-badge'),
+                    mistakeCounter: document.getElementById('mistake-counter'),
+                    mistakeVal: document.getElementById('mistake-val')
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.setupTheme();
+                this.setupEventListeners();
+                this.generateNumberPad();
+                this.checkDailyStatus();
+                
+                // 檢測是否在 standalone 模式下運行
+                if (window.navigator.standalone) {
+                    document.body.classList.add('standalone-mode');
+                }
+            }
+
+            checkDailyStatus() {
+                const today = new Date().toISOString().split('T')[0];
+                const completed = localStorage.getItem(`daily_completed_${today}`);
+                if (completed) this.elements.dailyBadge.classList.remove('hidden');
+                else this.elements.dailyBadge.classList.add('hidden');
+            }
+
+            showMenu() {
+                this.stopTimer();
+                this.checkDailyStatus();
+                
+                // Explicitly hide modals via classes AND remove inline style (Critical Fix)
+                this.elements.victoryModal.classList.add('hidden');
+                this.elements.victoryModal.style.removeProperty('display');
+                
+                this.elements.gameOverModal.classList.add('hidden');
+                this.elements.gameOverModal.style.removeProperty('display');
+
+                this.elements.gameScreen.classList.add('hidden');
+                this.elements.gameScreen.classList.remove('flex');
+
+                this.elements.menuScreen.classList.remove('hidden');
+            }
+
+            startGame(difficulty, isDaily = false) {
+                this.currentDifficulty = difficulty;
+                this.isDailyChallenge = isDaily;
+                
+                if (isDaily) {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    let seed = 0;
+                    for (let i = 0; i < todayStr.length; i++) {
+                        seed = ((seed << 5) - seed) + todayStr.charCodeAt(i);
+                        seed |= 0;
+                    }
+                    this.randomGenerator = new SeededRandom(Math.abs(seed));
+                    const day = new Date().getDate();
+                    this.currentDifficulty = day % 2 === 0 ? 'easy' : 'medium';
+                } else {
+                    this.randomGenerator = { next: () => Math.random() };
+                }
+
+                this.elements.menuScreen.classList.add('hidden');
+                this.elements.gameScreen.classList.remove('hidden');
+                this.elements.gameScreen.classList.add('flex');
+                this.elements.gameTitle.textContent = isDaily ? `每日挑戰` : 'Web Sudoku';
+                this.elements.difficultyBadge.textContent = this.difficultyLabels[difficulty === 'daily' ? this.currentDifficulty : difficulty];
+                
+                const colors = { 'easy': 'text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400', 'medium': 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-400', 'hard': 'text-orange-600 bg-orange-50 dark:bg-orange-900/30 dark:text-orange-400', 'expert': 'text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400' };
+                this.elements.difficultyBadge.className = `text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full ${colors[this.currentDifficulty]}`;
+
+                this.elements.loadingOverlay.classList.remove('hidden');
+                setTimeout(() => {
+                    this.generateGame();
+                    this.elements.loadingOverlay.classList.add('hidden');
+                }, 50);
+            }
+
+            random() { return this.randomGenerator.next(); }
+
+            generateGame() {
+                const filledCount = this.difficultyMap[this.currentDifficulty];
+                this.solution = this.generateFullBoard();
+                this.createPuzzle(filledCount);
+                this.notes = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
+                this.historyStack = [];
+                this.selectedCell = null;
+                this.timer = 0;
+                this.mistakes = 0; // Reset mistakes
+                this.updateMistakesDisplay();
+                this.isNoteMode = false;
+                this.elements.noteModeBtn.classList.remove('active');
+                
+                this.updateTimerDisplay();
+                this.startTimer();
+                this.renderBoard();
+                this.updateNumberPadStatus();
+            }
+
+            updateMistakesDisplay() {
+                this.elements.mistakeVal.textContent = this.mistakes;
+                const counter = this.elements.mistakeCounter;
+                if (this.mistakes > 0) {
+                     counter.classList.add('text-red-500', 'dark:text-red-400');
+                } else {
+                     counter.classList.remove('text-red-500', 'dark:text-red-400');
+                }
+            }
+
+            generateFullBoard() {
+                const board = Array(9).fill().map(() => Array(9).fill(0));
+                for (let i = 0; i < 9; i += 3) this.fillBox(board, i, i);
+                this.solveSudoku(board, true);
+                return board;
+            }
+
+            fillBox(board, row, col) {
+                let num;
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        do { num = Math.floor(this.random() * 9) + 1; } while (!this.isSafeBox(board, row, col, num));
+                        board[row + i][col + j] = num;
+                    }
+                }
+            }
+
+            isSafeBox(board, rowStart, colStart, num) {
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        if (board[rowStart + i][colStart + j] === num) return false;
+                    }
+                }
+                return true;
+            }
+
+            solveSudoku(board, randomized = false) {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (board[row][col] === 0) {
+                            let nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+                            if (randomized) {
+                                for (let i = nums.length - 1; i > 0; i--) {
+                                    const j = Math.floor(this.random() * (i + 1));
+                                    [nums[i], nums[j]] = [nums[j], nums[i]];
+                                }
+                            }
+                            for (let num of nums) {
+                                if (this.isSafe(board, row, col, num)) {
+                                    board[row][col] = num;
+                                    if (this.solveSudoku(board, randomized)) return true;
+                                    board[row][col] = 0;
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            isSafe(board, row, col, num) {
+                for (let x = 0; x < 9; x++) {
+                    if (board[row][x] === num) return false;
+                    if (board[x][col] === num) return false;
+                }
+                const startRow = row - row % 3;
+                const startCol = col - col % 3;
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        if (board[i + startRow][j + startCol] === num) return false;
+                    }
+                }
+                return true;
+            }
+
+            createPuzzle(clues) {
+                this.board = this.solution.map(row => [...row]);
+                this.initial = Array(9).fill().map(() => Array(9).fill(false));
+                let positions = [];
+                for(let r=0; r<9; r++) for(let c=0; c<9; c++) positions.push([r,c]);
+                for (let i = positions.length - 1; i > 0; i--) {
+                    const j = Math.floor(this.random() * (i + 1));
+                    [positions[i], positions[j]] = [positions[j], positions[i]];
+                }
+                let attempts = 81 - clues;
+                let idx = 0;
+                while (attempts > 0 && idx < 81) {
+                    let [r, c] = positions[idx];
+                    if (this.board[r][c] !== 0) {
+                        this.board[r][c] = 0;
+                        attempts--;
+                    }
+                    idx++;
+                }
+                for(let r=0; r<9; r++){
+                    for(let c=0; c<9; c++){
+                        if(this.board[r][c] !== 0) this.initial[r][c] = true;
+                    }
+                }
+            }
+
+            renderBoard() {
+                this.elements.grid.innerHTML = '';
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'sudoku-cell flex items-center justify-center text-xl md:text-2xl relative';
+                        cell.dataset.row = r;
+                        cell.dataset.col = c;
+                        this.updateCellVisuals(cell, r, c);
+                        this.elements.grid.appendChild(cell);
+                    }
+                }
+            }
+
+            updateBoardVisualsOnly() {
+                const cells = this.elements.grid.children;
+                for (let i = 0; i < 81; i++) {
+                    const r = Math.floor(i / 9);
+                    const c = i % 9;
+                    this.updateCellVisuals(cells[i], r, c);
+                }
+            }
+
+            updateCellVisuals(cell, r, c) {
+                const val = this.board[r][c];
+                const isFixed = this.initial[r][c];
+                const isSelected = this.selectedCell && this.selectedCell.r === r && this.selectedCell.c === c;
+                
+                cell.innerHTML = ''; 
+                cell.className = 'sudoku-cell flex items-center justify-center text-xl md:text-2xl relative transition-colors duration-75 ';
+                
+                let bgClass = '';
+                
+                if (isSelected) {
+                    bgClass = 'bg-brand-200 dark:bg-brand-600'; 
+                } else if (this.selectedCell) {
+                    if (val !== 0 && val === this.board[this.selectedCell.r][this.selectedCell.c]) {
+                        bgClass = 'bg-brand-100 dark:bg-brand-800/60';
+                    } else if (r === this.selectedCell.r || c === this.selectedCell.c || 
+                        (Math.floor(r/3) === Math.floor(this.selectedCell.r/3) && Math.floor(c/3) === Math.floor(this.selectedCell.c/3))) {
+                        bgClass = 'bg-slate-100 dark:bg-slate-800';
+                    }
+                }
+                cell.classList.add(...(bgClass ? bgClass.split(' ') : []));
+
+                if (val !== 0) {
+                    cell.textContent = val;
+                    if (isFixed) {
+                        cell.classList.add('font-bold', 'text-slate-800', 'dark:text-white');
+                    } else {
+                        if (val !== this.solution[r][c]) {
+                            cell.classList.add('text-red-500', 'bg-red-50', 'dark:bg-red-900/30', 'dark:text-red-400');
+                        } else {
+                            if (isSelected) {
+                                cell.classList.add('text-brand-800', 'dark:text-white'); 
+                            } else {
+                                cell.classList.add('text-brand-600', 'dark:text-brand-400');
+                            }
+                        }
+                    }
+                } else {
+                    if (this.notes[r][c].size > 0) {
+                        const noteGrid = document.createElement('div');
+                        noteGrid.className = 'note-grid';
+                        for(let n=1; n<=9; n++) {
+                            const span = document.createElement('span');
+                            span.className = 'note-num';
+                            if(this.notes[r][c].has(n)) span.textContent = n;
+                            noteGrid.appendChild(span);
+                        }
+                        cell.appendChild(noteGrid);
+                    }
+                }
+            }
+
+            generateNumberPad() {
+                this.elements.numPad.innerHTML = '';
+                for (let i = 1; i <= 9; i++) {
+                    const btn = document.createElement('button');
+                    btn.textContent = i;
+                    btn.className = 'numpad-btn h-12 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-b-4 border-slate-200 dark:border-slate-700 font-bold text-xl text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-slate-700 active:border-b-0 active:translate-y-0.5 transition-all';
+                    btn.onclick = () => this.handleNumberInput(i);
+                    this.elements.numPad.appendChild(btn);
+                }
+            }
+
+            updateNumberPadStatus() {
+                const counts = Array(10).fill(0);
+                for(let r=0; r<9; r++) {
+                    for(let c=0; c<9; c++) {
+                        const val = this.board[r][c];
+                        if (val > 0) counts[val]++;
+                    }
+                }
+                const buttons = this.elements.numPad.children;
+                for(let i=0; i<9; i++) {
+                    const num = i + 1;
+                    if (counts[num] >= 9) buttons[i].classList.add('completed');
+                    else buttons[i].classList.remove('completed');
+                }
+            }
+
+            setupEventListeners() {
+                document.querySelectorAll('.menu-btn').forEach(btn => {
+                    btn.addEventListener('click', () => this.startGame(btn.dataset.mode, false));
+                });
+                this.elements.dailyBtn.addEventListener('click', () => this.startGame('daily', true));
+                this.elements.backToMenuBtn.addEventListener('click', () => this.showMenu());
+                this.elements.grid.addEventListener('click', (e) => {
+                    const cell = e.target.closest('.sudoku-cell');
+                    if (!cell) return;
+                    this.selectCell(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
+                });
+                document.addEventListener('keydown', (e) => this.handleKeydown(e));
+                this.elements.pauseBtn.addEventListener('click', () => this.togglePause());
+                this.elements.resumeBtn.addEventListener('click', () => this.togglePause());
+                this.elements.victoryConfirmBtn.addEventListener('click', () => this.showMenu());
+                this.elements.gameOverConfirmBtn.addEventListener('click', () => this.showMenu());
+                this.elements.noteModeBtn.addEventListener('click', () => {
+                    this.isNoteMode = !this.isNoteMode;
+                    this.elements.noteModeBtn.classList.toggle('active');
+                });
+                this.elements.eraseBtn.addEventListener('click', () => this.handleNumberInput(0));
+                this.elements.undoBtn.addEventListener('click', () => this.undo());
+                this.elements.menuStatsBtn.addEventListener('click', () => this.showStats());
+                this.elements.closeStats.addEventListener('click', () => this.elements.statsModal.classList.add('hidden'));
+                this.elements.clearStats.addEventListener('click', () => {
+                    localStorage.removeItem('sudoku_history');
+                    this.showStats();
+                });
+                this.elements.menuThemeToggle.addEventListener('click', () => {
+                    document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+                });
+            }
+
+            setupTheme() {
+                const stored = localStorage.getItem('theme');
+                if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+
+            selectCell(r, c) {
+                if (!this.isRunning && !this.elements.victoryModal.classList.contains('hidden')) return;
+                if (!this.isRunning && !this.elements.gameOverModal.classList.contains('hidden')) return;
+                this.selectedCell = { r, c };
+                this.updateBoardVisualsOnly();
+            }
+
+            handleKeydown(e) {
+                if (this.elements.gameScreen.classList.contains('hidden')) return;
+                if (!this.isRunning) return;
+                
+                if (this.selectedCell) {
+                    let { r, c } = this.selectedCell;
+                    if (e.key === 'ArrowUp') r = Math.max(0, r - 1);
+                    if (e.key === 'ArrowDown') r = Math.min(8, r + 1);
+                    if (e.key === 'ArrowLeft') c = Math.max(0, c - 1);
+                    if (e.key === 'ArrowRight') c = Math.min(8, c + 1);
+                    if (r !== this.selectedCell.r || c !== this.selectedCell.c) {
+                        this.selectCell(r, c);
+                        e.preventDefault();
+                    }
+                }
+                if (e.key >= '1' && e.key <= '9') this.handleNumberInput(parseInt(e.key));
+                else if (e.key === 'Backspace' || e.key === 'Delete') this.handleNumberInput(0);
+                else if (e.key === 'n') this.elements.noteModeBtn.click();
+                else if (e.key === 'z' && (e.ctrlKey || e.metaKey)) this.undo();
+            }
+
+            handleNumberInput(num) {
+                if (!this.selectedCell || !this.isRunning) return;
+                const { r, c } = this.selectedCell;
+                if (this.initial[r][c]) return;
+
+                if (num !== 0) {
+                     const counts = this.board.flat().reduce((acc, val) => (val === num ? acc + 1 : acc), 0);
+                     if (counts >= 9 && this.board[r][c] !== num) return;
+                }
+
+                this.saveStateToHistory();
+
+                if (this.isNoteMode) {
+                    if (num === 0) this.notes[r][c].clear();
+                    else if (this.notes[r][c].has(num)) this.notes[r][c].delete(num);
+                    else this.notes[r][c].add(num);
+                } else {
+                    if (num === 0) {
+                        this.board[r][c] = 0;
+                    } else {
+                        // Check Mistake Logic
+                        if (num !== this.solution[r][c]) {
+                            this.mistakes++;
+                            this.updateMistakesDisplay();
+                            this.elements.mistakeCounter.classList.add('animate-shake');
+                            setTimeout(() => this.elements.mistakeCounter.classList.remove('animate-shake'), 500);
+                            
+                            if (this.mistakes >= this.maxMistakes) {
+                                this.board[r][c] = num; // Show the mistake before game over
+                                this.updateBoardVisualsOnly();
+                                this.gameOver();
+                                return;
+                            }
+                        }
+                        
+                        this.board[r][c] = num;
+                        this.notes[r][c].clear();
+                    }
+                    // Visual update first, then check win
+                    this.updateBoardVisualsOnly();
+                    this.updateNumberPadStatus();
+                    
+                    // Delay slightly to allow UI to paint
+                    setTimeout(() => this.checkWinCondition(), 10);
+                    return; 
+                }
+                
+                this.updateBoardVisualsOnly();
+            }
+
+            gameOver() {
+                this.stopTimer();
+                this.elements.gameOverModal.classList.remove('hidden');
+                this.elements.gameOverModal.style.display = 'flex'; // Ensure flex for centering
+            }
+
+            saveStateToHistory() {
+                if(this.historyStack.length > 20) this.historyStack.shift();
+                this.historyStack.push({
+                    board: this.board.map(row => [...row]),
+                    notes: this.notes.map(row => row.map(set => new Set(set))),
+                    mistakes: this.mistakes
+                });
+            }
+
+            undo() {
+                if (this.historyStack.length === 0) return;
+                const prevState = this.historyStack.pop();
+                this.board = prevState.board;
+                this.notes = prevState.notes;
+                if (prevState.mistakes !== undefined) {
+                     this.mistakes = prevState.mistakes;
+                     this.updateMistakesDisplay();
+                }
+                this.updateBoardVisualsOnly();
+                this.updateNumberPadStatus();
+            }
+
+            startTimer() {
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                this.isRunning = true;
+                this.timerInterval = setInterval(() => {
+                    this.timer++;
+                    this.updateTimerDisplay();
+                }, 1000);
+            }
+            stopTimer() {
+                this.isRunning = false;
+                if (this.timerInterval) clearInterval(this.timerInterval);
+            }
+            togglePause() {
+                if (this.isRunning) {
+                    this.stopTimer();
+                    this.elements.pauseOverlay.classList.remove('hidden');
+                } else {
+                    this.startTimer();
+                    this.elements.pauseOverlay.classList.add('hidden');
+                }
+            }
+            updateTimerDisplay() {
+                const mins = Math.floor(this.timer / 60).toString().padStart(2, '0');
+                const secs = (this.timer % 60).toString().padStart(2, '0');
+                this.elements.timer.textContent = `${mins}:${secs}`;
+            }
+
+            checkWinCondition() {
+                for(let r=0; r<9; r++) {
+                    for(let c=0; c<9; c++) {
+                        if (this.board[r][c] === 0) return;
+                    }
+                }
+
+                let isCorrect = true;
+                for(let r=0; r<9; r++) {
+                    for(let c=0; c<9; c++) {
+                        if (this.board[r][c] !== this.solution[r][c]) {
+                            isCorrect = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (isCorrect) {
+                    this.stopTimer();
+                    this.saveVictory();
+                    this.showVictoryModal();
+                }
+            }
+
+            saveVictory() {
+                const history = JSON.parse(localStorage.getItem('sudoku_history') || '[]');
+                const record = {
+                    date: new Date().toISOString(),
+                    difficulty: this.currentDifficulty,
+                    time: this.timer
+                };
+                history.unshift(record);
+                localStorage.setItem('sudoku_history', JSON.stringify(history));
+                if (this.isDailyChallenge) {
+                    const today = new Date().toISOString().split('T')[0];
+                    localStorage.setItem(`daily_completed_${today}`, 'true');
+                }
+            }
+
+            showVictoryModal() {
+                const mins = Math.floor(this.timer / 60).toString().padStart(2, '0');
+                const secs = (this.timer % 60).toString().padStart(2, '0');
+                document.getElementById('victory-difficulty').textContent = this.difficultyLabels[this.currentDifficulty];
+                document.getElementById('victory-time').textContent = `${mins}:${secs}`;
+                
+                this.elements.victoryModal.classList.remove('hidden');
+                this.elements.victoryModal.style.display = 'flex'; // Ensure flex for centering
+            }
+
+            showStats() {
+                const history = JSON.parse(localStorage.getItem('sudoku_history') || '[]');
+                document.getElementById('stat-total').textContent = history.length;
+                let streak = 0;
+                let date = new Date();
+                while (true) {
+                    const dateStr = date.toISOString().split('T')[0];
+                    if (localStorage.getItem(`daily_completed_${dateStr}`)) {
+                        streak++;
+                        date.setDate(date.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
+                document.getElementById('stat-daily-streak').textContent = streak;
+
+                const list = document.getElementById('history-list');
+                list.innerHTML = '';
+                history.slice(0, 10).forEach(rec => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-slate-50 dark:bg-slate-700/50 p-2 rounded border border-slate-100 dark:border-slate-700';
+                    const dateObj = new Date(rec.date);
+                    const date = `${dateObj.getMonth()+1}/${dateObj.getDate()}`;
+                    const mins = Math.floor(rec.time/60).toString().padStart(2,'0');
+                    const secs = (rec.time%60).toString().padStart(2,'0');
+                    li.innerHTML = `<span class="text-slate-600 dark:text-slate-300 font-medium">${date} <span class="text-[10px] text-slate-400 font-normal">(${this.difficultyLabels[rec.difficulty] || rec.difficulty})</span></span><span class="font-mono font-bold text-brand-600 dark:text-brand-400">${mins}:${secs}</span>`;
+                    list.appendChild(li);
+                });
+                this.elements.statsModal.classList.remove('hidden');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new SudokuApp();
+        });
+    </script>
+</body>
+</html>
