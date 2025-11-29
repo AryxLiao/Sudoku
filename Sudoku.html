@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <!-- PWA 設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="數獨大師">
-    
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#ffffff">
 
     <title>數獨大師 (Sudoku Master)</title>
 
-    <link rel="manifest" href='data:application/manifest+json;base64,ewogICJuYW1lIjogIuZWuOeNqOWkp+W4qyIsCiAgInNob3J0X25hbWUiOiAi5pW4542oIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJ0aGVtZV9jb2xvciI6ICIjMGVhNWU5IiwKICAiaWNvbnMiOiBbXQp9'>
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' style='background:%230ea5e9'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='300' fill='white' font-family='sans-serif' font-weight='bold'%3E9%3C/text%3E%3C/svg%3E">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' style='background:%230ea5e9'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='300' fill='white' font-family='sans-serif' font-weight='bold'%3E9%3C/text%3E%3C/svg%3E">
+    <!-- PWA Icon: 3x3 方格設計 -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='120' fill='%230ea5e9'/%3E%3Cg fill='white'%3E%3Crect x='116' y='116' width='80' height='80' rx='10'/%3E%3Crect x='216' y='116' width='80' height='80' rx='10'/%3E%3Crect x='316' y='116' width='80' height='80' rx='10'/%3E%3Crect x='116' y='216' width='80' height='80' rx='10'/%3E%3Crect x='216' y='216' width='80' height='80' rx='10'/%3E%3Crect x='316' y='216' width='80' height='80' rx='10'/%3E%3Crect x='116' y='316' width='80' height='80' rx='10'/%3E%3Crect x='216' y='316' width='80' height='80' rx='10'/%3E%3Crect x='316' y='316' width='80' height='80' rx='10'/%3E%3C/g%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='120' fill='%230ea5e9'/%3E%3Cg fill='white'%3E%3Crect x='116' y='116' width='80' height='80' rx='10'/%3E%3Crect x='216' y='116' width='80' height='80' rx='10'/%3E%3Crect x='316' y='116' width='80' height='80' rx='10'/%3E%3Crect x='116' y='216' width='80' height='80' rx='10'/%3E%3Crect x='216' y='216' width='80' height='80' rx='10'/%3E%3Crect x='316' y='216' width='80' height='80' rx='10'/%3E%3Crect x='116' y='316' width='80' height='80' rx='10'/%3E%3Crect x='216' y='316' width='80' height='80' rx='10'/%3E%3Crect x='316' y='316' width='80' height='80' rx='10'/%3E%3C/g%3E%3C/svg%3E">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -71,10 +71,29 @@
         }
     </script>
     <style>
-        html {
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+            -webkit-overflow-scrolling: auto;
+            overscroll-behavior: none;
+            touch-action: none;
         }
+
+        body {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+
+        .scrollable-content {
+            overflow-y: auto;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+        }
+        .scrollable-content::-webkit-scrollbar { width: 0px; background: transparent; }
 
         .sudoku-cell {
             border-right: 1px solid #e2e8f0;
@@ -83,20 +102,15 @@
             -webkit-user-select: none;
             cursor: pointer;
             transition: all 0.1s ease-in-out;
+            touch-action: manipulation;
         }
         .sudoku-cell:nth-child(n+19):nth-child(-n+27),
-        .sudoku-cell:nth-child(n+46):nth-child(-n+54) {
-            border-bottom: 2px solid #475569;
-        }
+        .sudoku-cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #475569; }
         .sudoku-cell:nth-child(9n+3),
-        .sudoku-cell:nth-child(9n+6) {
-            border-right: 2px solid #475569;
-        }
+        .sudoku-cell:nth-child(9n+6) { border-right: 2px solid #475569; }
         .sudoku-cell:nth-child(9n) { border-right: none; }
         .sudoku-cell:nth-child(n+73) { border-bottom: none; }
 
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-        
         .note-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -113,8 +127,7 @@
             justify-content: center;
             color: #64748b;
         }
-        
-        @media (min-width: 768px) { .note-num { font-size: 12px; } }
+        @media (min-width: 768px) { .note-num { font-size: 11px; } }
 
         .dark .sudoku-cell { border-color: #334155; }
         .dark .sudoku-cell:nth-child(n+19):nth-child(-n+27),
@@ -123,37 +136,31 @@
         .dark .sudoku-cell:nth-child(9n+6) { border-right: 2px solid #94a3b8; }
         .dark .note-num { color: #94a3b8; }
 
+        .numpad-btn { touch-action: manipulation; }
         .numpad-btn.completed {
             opacity: 0.2;
             pointer-events: none;
             filter: grayscale(100%);
         }
-
-        body.standalone-mode {
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-left: env(safe-area-inset-left);
-            padding-right: env(safe-area-inset-right);
-            height: 100vh;
-            width: 100vw;
-        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200 overflow-hidden pt-safe-top pb-safe-bottom pl-safe-left pr-safe-right">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors duration-200">
 
     <!-- Menu Screen -->
-    <div id="menu-screen" class="fixed inset-0 z-40 bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-4 animate-fade-in pt-safe-top pb-safe-bottom">
-        <div class="mb-8 md:mb-12 text-center">
+    <div id="menu-screen" class="absolute inset-0 z-40 bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-4 animate-fade-in scrollable-content">
+        <div class="mb-8 md:mb-12 text-center shrink-0">
+            <!-- Icon Updated to 3x3 Grid -->
             <div class="inline-block p-4 md:p-6 bg-brand-100 dark:bg-slate-800 rounded-2xl mb-4 shadow-lg transform rotate-3 hover:rotate-6 transition">
                 <svg class="w-16 h-16 md:w-24 md:h-24 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9h18M3 15h18M9 3v18M15 3v18"/>
                 </svg>
             </div>
             <h1 class="text-4xl md:text-6xl font-extrabold text-slate-800 dark:text-white tracking-tight">數獨大師</h1>
             <p class="text-slate-500 dark:text-slate-400 mt-2 md:mt-4 font-medium text-base md:text-xl">鍛鍊你的邏輯思維</p>
         </div>
 
-        <div class="w-full max-w-xs md:max-w-md space-y-3 md:space-y-5">
+        <div class="w-full max-w-xs md:max-w-md space-y-3 md:space-y-5 shrink-0">
             <button class="menu-btn w-full py-3.5 md:py-5 rounded-xl bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600 dark:hover:border-brand-400 dark:hover:text-brand-400 font-bold text-lg md:text-2xl shadow-sm transition active:scale-95 flex items-center justify-between px-6 md:px-8 group" data-mode="easy">
                 <span class="group-hover:translate-x-1 transition-transform">簡單</span>
                 <span class="text-xs md:text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 md:px-3 py-0.5 md:py-1 rounded-full">入門</span>
@@ -190,10 +197,12 @@
             </button>
         </div>
 
-        <div class="mt-8 md:mt-12 flex gap-6 md:gap-10">
+        <div class="mt-8 md:mt-12 flex gap-6 md:gap-10 pb-8">
             <button id="menu-theme-toggle" class="p-2 md:p-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition" title="切換主題">
+                <!-- Sun Icon (Show in Dark Mode) -->
                 <svg class="w-6 h-6 md:w-8 md:h-8 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                <svg class="w-6 h-6 md:w-8 md:h-8 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 24.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                <!-- Moon Icon (Show in Light Mode) - FIX: Corrected d path for moon -->
+                <svg class="w-6 h-6 md:w-8 md:h-8 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
             </button>
              <button id="menu-stats-btn" class="p-2 md:p-3 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition" title="查看紀錄">
                 <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path></svg>
@@ -201,10 +210,9 @@
         </div>
     </div>
 
-    <!-- Game Screen (Optimized for Landscape) -->
-    <div id="game-screen" class="hidden h-screen w-full bg-slate-50 dark:bg-slate-950 pt-safe-top pb-safe-bottom pl-safe-left pr-safe-right flex-col">
-        
-        <!-- Navbar (Sticky Top) -->
+    <!-- Game Screen -->
+    <div id="game-screen" class="hidden absolute inset-0 w-full h-full bg-slate-50 dark:bg-slate-950 flex-col">
+        <!-- Navbar -->
         <header class="w-full bg-white dark:bg-slate-900 shadow-sm p-3 md:p-4 flex justify-between items-center z-10 shrink-0 border-b border-slate-100 dark:border-slate-800">
             <button id="back-to-menu" class="p-2 -ml-2 md:ml-0 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
                 <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -221,35 +229,31 @@
             <div class="w-10 md:w-14"></div>
         </header>
 
-        <!-- Main Content: Auto switch to row layout on landscape/large screens -->
-        <main class="flex-grow w-full h-full overflow-hidden flex flex-col md:flex-row items-center justify-center p-4 gap-6 md:gap-12">
+        <!-- Main Content -->
+        <main class="flex-grow w-full h-full overflow-hidden flex flex-col md:flex-row items-center justify-center p-2 md:p-4 gap-4 md:gap-12 relative">
             
-            <!-- Board Area (Scales with height in landscape) -->
+            <!-- Board Area -->
             <div class="relative w-full aspect-square max-w-lg md:max-w-none md:h-full md:w-auto shadow-xl rounded-lg overflow-hidden border-2 border-slate-800 dark:border-slate-600 bg-white dark:bg-slate-900 select-none shrink-0">
-                <!-- Loading Overlay -->
                 <div id="loading-overlay" class="absolute inset-0 bg-white/95 dark:bg-slate-900/95 z-20 flex items-center justify-center hidden">
                     <div class="flex flex-col items-center gap-3">
-                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600"></div>
-                        <span class="text-sm font-medium text-slate-500">生成謎題中...</span>
+                        <div class="animate-spin rounded-full h-10 w-10 md:h-16 md:w-16 border-b-2 md:border-b-4 border-brand-600"></div>
+                        <span class="text-sm md:text-lg font-medium text-slate-500">生成唯一解題目中...</span>
                     </div>
                 </div>
 
-                <!-- Pause Overlay -->
                 <div id="pause-overlay" class="absolute inset-0 bg-slate-900/90 z-10 flex flex-col items-center justify-center text-white hidden backdrop-blur-sm">
-                    <h2 class="text-3xl font-bold mb-6">遊戲暫停</h2>
-                    <button id="resume-btn" class="px-8 py-3 bg-brand-600 rounded-full hover:bg-brand-500 font-semibold shadow-lg transform transition active:scale-95 text-lg">繼續遊戲</button>
+                    <h2 class="text-3xl md:text-5xl font-bold mb-6">遊戲暫停</h2>
+                    <button id="resume-btn" class="px-8 py-3 md:px-12 md:py-4 bg-brand-600 rounded-full hover:bg-brand-500 font-semibold shadow-lg transform transition active:scale-95 text-lg md:text-2xl">繼續遊戲</button>
                 </div>
 
-                <!-- The Grid -->
                 <div id="sudoku-grid" class="w-full h-full grid grid-cols-9 grid-rows-9">
-                    <!-- Cells generated by JS -->
+                    <!-- Grid Cells -->
                 </div>
             </div>
 
-            <!-- Controls Sidebar (Right side on landscape) -->
-            <div class="flex flex-col w-full max-w-lg md:w-auto md:h-full md:justify-center gap-4 md:gap-8 shrink-0">
+            <!-- Controls Sidebar -->
+            <div class="flex flex-col w-full max-w-lg md:w-auto md:h-full md:justify-center gap-2 md:gap-6 shrink-0">
                 
-                <!-- Top Controls: Timer & Pause -->
                 <div class="w-full flex justify-between items-center text-sm md:text-base">
                     <div class="flex items-center gap-4 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm border border-slate-100 dark:border-slate-700 w-full justify-center">
                         <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -260,7 +264,6 @@
                     </button>
                 </div>
 
-                <!-- Action Buttons -->
                 <div class="flex justify-between items-center gap-2">
                     <button id="undo-btn" class="action-btn flex-1 flex flex-col items-center gap-1 text-slate-500 hover:text-brand-600 transition py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
                         <div class="p-2 rounded-full bg-white dark:bg-slate-800 shadow border border-slate-200 dark:border-slate-700">
@@ -285,7 +288,6 @@
                     </button>
                 </div>
 
-                <!-- Number Pad: 9x1 on Mobile, 3x3 on Landscape/Tablet -->
                 <div class="w-full grid grid-cols-9 md:grid-cols-3 gap-1.5 md:gap-3">
                     <!-- Numbers 1-9 generated by JS -->
                 </div>
@@ -312,10 +314,7 @@
                     <div id="victory-time" class="font-bold text-brand-600 dark:text-brand-400 text-base md:text-xl"></div>
                  </div>
             </div>
-            
-            <button id="victory-confirm-btn" class="w-full py-3.5 md:py-5 bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white rounded-xl font-bold shadow-lg transition transform active:scale-95 text-lg md:text-2xl">
-                返回主選單
-            </button>
+            <button id="victory-confirm-btn" class="w-full py-3.5 md:py-5 bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white rounded-xl font-bold shadow-lg transition transform active:scale-95 text-lg md:text-2xl">返回主選單</button>
         </div>
     </div>
 
@@ -327,42 +326,40 @@
             </div>
             <h2 class="text-3xl md:text-5xl font-extrabold text-slate-800 dark:text-white mb-2 md:mb-4">遊戲結束</h2>
             <p class="text-slate-500 dark:text-slate-400 mb-8 md:mb-12 text-base md:text-xl">錯誤次數已達上限，再接再厲！</p>
-            
-            <button id="game-over-confirm-btn" class="w-full py-3.5 md:py-5 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-bold shadow-lg transition transform active:scale-95 text-lg md:text-2xl">
-                返回主選單
-            </button>
+            <button id="game-over-confirm-btn" class="w-full py-3.5 md:py-5 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-bold shadow-lg transition transform active:scale-95 text-lg md:text-2xl">返回主選單</button>
         </div>
     </div>
 
     <!-- Stats Modal -->
     <div id="stats-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md md:max-w-xl p-6 md:p-8 transform transition-all scale-100 border dark:border-slate-700 pt-safe-top pb-safe-bottom">
-            <div class="flex justify-between items-center mb-6 md:mb-8">
-                <h3 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">遊戲紀錄</h3>
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md md:max-w-xl p-6 md:p-8 transform transition-all scale-100 border dark:border-slate-700 flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6 md:mb-8 shrink-0">
+                <h3 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">遊玩紀錄</h3>
                 <button id="close-stats" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                     <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            
-            <div class="space-y-4 md:space-y-6">
-                <div class="grid grid-cols-2 gap-4 md:gap-6 mb-6">
-                    <div class="text-center p-4 md:p-6 bg-slate-50 dark:bg-slate-700 rounded-xl">
-                        <div class="text-xs md:text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">總通關數</div>
-                        <div class="text-2xl md:text-4xl font-extrabold text-brand-600 dark:text-brand-400 mt-1 md:mt-2" id="stat-total">0</div>
+            <div class="space-y-4 md:space-y-6 overflow-hidden flex flex-col flex-grow">
+                <div class="grid grid-cols-3 gap-2 md:gap-4 shrink-0">
+                    <div class="text-center p-3 md:p-4 bg-slate-50 dark:bg-slate-700 rounded-xl">
+                        <div class="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">總通關數</div>
+                        <div class="text-xl md:text-3xl font-extrabold text-brand-600 dark:text-brand-400 mt-1 md:mt-2" id="stat-total">0</div>
                     </div>
-                     <div class="text-center p-4 md:p-6 bg-gradient-to-br from-indigo-50 to-pink-50 dark:from-indigo-900/20 dark:to-pink-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
-                        <div class="text-xs md:text-sm font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-wide">每日連勝</div>
-                        <div class="text-2xl md:text-4xl font-extrabold text-indigo-600 dark:text-indigo-300 mt-1 md:mt-2" id="stat-daily-streak">0</div>
+                    <div class="text-center p-3 md:p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-100 dark:border-green-800">
+                        <div class="text-[10px] md:text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">目前連勝</div>
+                        <div class="text-xl md:text-3xl font-extrabold text-green-700 dark:text-green-300 mt-1 md:mt-2" id="stat-current-streak">0</div>
+                    </div>
+                     <div class="text-center p-3 md:p-4 bg-gradient-to-br from-indigo-50 to-pink-50 dark:from-indigo-900/20 dark:to-pink-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                        <div class="text-[10px] md:text-xs font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-wide">每日連勝</div>
+                        <div class="text-xl md:text-3xl font-extrabold text-indigo-600 dark:text-indigo-300 mt-1 md:mt-2" id="stat-daily-streak">0</div>
                     </div>
                 </div>
-
-                <h4 class="font-semibold text-slate-700 dark:text-slate-300 border-b pb-2 dark:border-slate-700 text-sm md:text-lg">最近紀錄</h4>
-                <ul id="history-list" class="space-y-2 md:space-y-3 text-xs md:text-base max-h-48 md:max-h-64 overflow-y-auto pr-1">
+                <h4 class="font-semibold text-slate-700 dark:text-slate-300 border-b pb-2 dark:border-slate-700 text-sm md:text-lg shrink-0">最近 50 筆紀錄</h4>
+                <ul id="history-list" class="space-y-2 md:space-y-3 text-xs md:text-base overflow-y-auto pr-1 flex-grow scrollable-content">
                     <!-- History items -->
                 </ul>
             </div>
-            
-            <div class="mt-6 md:mt-8 text-center">
+            <div class="mt-6 md:mt-8 text-center shrink-0">
                  <button id="clear-stats" class="text-xs md:text-sm text-red-400 hover:text-red-600 dark:hover:text-red-300 underline transition">清除所有紀錄</button>
             </div>
         </div>
@@ -387,24 +384,26 @@
                 this.currentDifficulty = 'easy'; this.isDailyChallenge = false;
                 this.randomGenerator = { next: () => Math.random() };
                 
-                // Mistake System
                 this.mistakes = 0;
                 this.maxMistakes = 3;
 
-                this.difficultyMap = {
-                    'easy': 38, 'medium': 30, 'hard': 25, 'expert': 22
+                // 修正後的難度：嘗試挖空的數量 (僅作為目標，Unique check 優先)
+                this.difficultyTarget = {
+                    'easy': 40,   // 留 40 (挖掉 41)
+                    'medium': 32, // 留 32 (挖掉 49)
+                    'hard': 26,   // 留 26 (挖掉 55)
+                    'expert': 22  // 留 22 (挖掉 59)
                 };
                 
                 this.difficultyLabels = {
                     'easy': '簡單', 'medium': '中等', 'hard': '困難', 'expert': '專家', 'daily': '每日挑戰'
                 };
 
-                // DOM Cache
                 this.elements = {
                     menuScreen: document.getElementById('menu-screen'),
                     gameScreen: document.getElementById('game-screen'),
                     grid: document.getElementById('sudoku-grid'),
-                    numPad: document.querySelector('.grid.grid-cols-9.md\\:grid-cols-3'), // Selector updated for new grid layout
+                    numPad: document.querySelector('.grid.grid-cols-9.md\\:grid-cols-3'),
                     timer: document.getElementById('timer'),
                     gameTitle: document.getElementById('game-title'),
                     difficultyBadge: document.getElementById('game-difficulty-badge'),
@@ -439,32 +438,37 @@
                 this.setupEventListeners();
                 this.generateNumberPad();
                 this.checkDailyStatus();
-                
-                if (window.navigator.standalone) {
-                    document.body.classList.add('standalone-mode');
+                this.initTotalWins(); // Initialize total wins if needed
+                if (window.navigator.standalone) document.body.classList.add('standalone-mode');
+            }
+
+            initTotalWins() {
+                if (localStorage.getItem('sudoku_total_wins') === null) {
+                    const history = JSON.parse(localStorage.getItem('sudoku_history') || '[]');
+                    const wins = history.filter(h => h.result !== 'fail').length;
+                    localStorage.setItem('sudoku_total_wins', wins);
+                }
+                // 初始化連勝
+                if (localStorage.getItem('sudoku_current_streak') === null) {
+                    localStorage.setItem('sudoku_current_streak', 0);
                 }
             }
 
             checkDailyStatus() {
                 const today = new Date().toISOString().split('T')[0];
                 const completed = localStorage.getItem(`daily_completed_${today}`);
-                if (completed) this.elements.dailyBadge.classList.remove('hidden');
-                else this.elements.dailyBadge.classList.add('hidden');
+                this.elements.dailyBadge.classList.toggle('hidden', !completed);
             }
 
             showMenu() {
                 this.stopTimer();
                 this.checkDailyStatus();
-                
                 this.elements.victoryModal.classList.add('hidden');
                 this.elements.victoryModal.style.removeProperty('display');
-                
                 this.elements.gameOverModal.classList.add('hidden');
                 this.elements.gameOverModal.style.removeProperty('display');
-
                 this.elements.gameScreen.classList.add('hidden');
                 this.elements.gameScreen.classList.remove('flex');
-
                 this.elements.menuScreen.classList.remove('hidden');
             }
 
@@ -475,10 +479,7 @@
                 if (isDaily) {
                     const todayStr = new Date().toISOString().split('T')[0];
                     let seed = 0;
-                    for (let i = 0; i < todayStr.length; i++) {
-                        seed = ((seed << 5) - seed) + todayStr.charCodeAt(i);
-                        seed |= 0;
-                    }
+                    for (let i = 0; i < todayStr.length; i++) seed = ((seed << 5) - seed) + todayStr.charCodeAt(i) | 0;
                     this.randomGenerator = new SeededRandom(Math.abs(seed));
                     const day = new Date().getDate();
                     this.currentDifficulty = day % 2 === 0 ? 'easy' : 'medium';
@@ -488,7 +489,7 @@
 
                 this.elements.menuScreen.classList.add('hidden');
                 this.elements.gameScreen.classList.remove('hidden');
-                this.elements.gameScreen.classList.add('flex');
+                this.elements.gameScreen.classList.add('flex'); // Apply flex
                 this.elements.gameTitle.textContent = isDaily ? `每日挑戰` : 'Web Sudoku';
                 this.elements.difficultyBadge.textContent = this.difficultyLabels[difficulty === 'daily' ? this.currentDifficulty : difficulty];
                 
@@ -505,9 +506,9 @@
             random() { return this.randomGenerator.next(); }
 
             generateGame() {
-                const filledCount = this.difficultyMap[this.currentDifficulty];
+                const targetClues = this.difficultyTarget[this.currentDifficulty];
                 this.solution = this.generateFullBoard();
-                this.createPuzzle(filledCount);
+                this.createUniquePuzzle(targetClues); // 使用唯一解生成器
                 this.notes = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
                 this.historyStack = [];
                 this.selectedCell = null;
@@ -599,31 +600,83 @@
                 return true;
             }
 
-            createPuzzle(clues) {
+            // --- 唯一解核心演算法 ---
+            createUniquePuzzle(targetClues) {
                 this.board = this.solution.map(row => [...row]);
                 this.initial = Array(9).fill().map(() => Array(9).fill(false));
+                
+                // 1. 建立所有座標列表並打亂
                 let positions = [];
                 for(let r=0; r<9; r++) for(let c=0; c<9; c++) positions.push([r,c]);
                 for (let i = positions.length - 1; i > 0; i--) {
                     const j = Math.floor(this.random() * (i + 1));
                     [positions[i], positions[j]] = [positions[j], positions[i]];
                 }
-                let attempts = 81 - clues;
-                let idx = 0;
-                while (attempts > 0 && idx < 81) {
-                    let [r, c] = positions[idx];
-                    if (this.board[r][c] !== 0) {
-                        this.board[r][c] = 0;
-                        attempts--;
+
+                let currentClues = 81;
+                
+                // 2. 嘗試移除數字
+                for (let i = 0; i < 81; i++) {
+                    if (currentClues <= targetClues) break;
+                    
+                    let [r, c] = positions[i];
+                    let temp = this.board[r][c];
+                    this.board[r][c] = 0; // 暫時移除
+
+                    // 3. 檢查是否仍有唯一解
+                    // 為了效能，我們不需要找出所有解，只要找到"超過1個解"就停止
+                    if (this.countSolutions(this.board, 2) !== 1) {
+                        this.board[r][c] = temp; // 放回去，因為移除後會造成多重解
+                    } else {
+                        currentClues--; // 移除成功
                     }
-                    idx++;
                 }
+
+                // 設定初始盤面標記
                 for(let r=0; r<9; r++){
                     for(let c=0; c<9; c++){
                         if(this.board[r][c] !== 0) this.initial[r][c] = true;
                     }
                 }
             }
+
+            // 快速求解計數器 (limit 設為 2，找到 2 個解就立刻回傳，節省效能)
+            countSolutions(board, limit) {
+                // 複製盤面以免汙染
+                let boardCopy = board.map(row => [...row]);
+                let count = 0;
+
+                const solve = () => {
+                    let r = -1, c = -1;
+                    // 找空位
+                    search: for (let i = 0; i < 9; i++) {
+                        for (let j = 0; j < 9; j++) {
+                            if (boardCopy[i][j] === 0) {
+                                r = i; c = j;
+                                break search;
+                            }
+                        }
+                    }
+
+                    if (r === -1) {
+                        count++;
+                        return;
+                    }
+
+                    for (let num = 1; num <= 9; num++) {
+                        if (count >= limit) return; // 已超過限制，不用再找了
+                        if (this.isSafe(boardCopy, r, c, num)) {
+                            boardCopy[r][c] = num;
+                            solve();
+                            boardCopy[r][c] = 0;
+                        }
+                    }
+                };
+
+                solve();
+                return count;
+            }
+            // --- 唯一解演算法結束 ---
 
             renderBoard() {
                 this.elements.grid.innerHTML = '';
@@ -657,7 +710,6 @@
                 cell.className = 'sudoku-cell flex items-center justify-center text-xl md:text-3xl lg:text-4xl relative transition-colors duration-75 ';
                 
                 let bgClass = '';
-                
                 if (isSelected) {
                     bgClass = 'bg-brand-200 dark:bg-brand-600'; 
                 } else if (this.selectedCell) {
@@ -751,10 +803,17 @@
                 this.elements.undoBtn.addEventListener('click', () => this.undo());
                 this.elements.menuStatsBtn.addEventListener('click', () => this.showStats());
                 this.elements.closeStats.addEventListener('click', () => this.elements.statsModal.classList.add('hidden'));
+                
+                // Add confirm dialog for clearing stats
                 this.elements.clearStats.addEventListener('click', () => {
-                    localStorage.removeItem('sudoku_history');
-                    this.showStats();
+                    if (confirm('確定要清除所有紀錄嗎？此操作無法復原。')) {
+                        localStorage.removeItem('sudoku_history');
+                        localStorage.removeItem('sudoku_total_wins'); 
+                        localStorage.removeItem('sudoku_current_streak');
+                        this.showStats();
+                    }
                 });
+
                 this.elements.menuThemeToggle.addEventListener('click', () => {
                     document.documentElement.classList.toggle('dark');
                     localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
@@ -847,6 +906,7 @@
 
             gameOver() {
                 this.stopTimer();
+                this.saveRecord('fail'); // 紀錄失敗
                 this.elements.gameOverModal.classList.remove('hidden');
                 this.elements.gameOverModal.style.display = 'flex'; 
             }
@@ -856,7 +916,8 @@
                 this.historyStack.push({
                     board: this.board.map(row => [...row]),
                     notes: this.notes.map(row => row.map(set => new Set(set))),
-                    mistakes: this.mistakes
+                    // Note: We intentionally don't need to save mistakes here because 
+                    // mistakes shouldn't be revertible via undo.
                 });
             }
 
@@ -865,10 +926,10 @@
                 const prevState = this.historyStack.pop();
                 this.board = prevState.board;
                 this.notes = prevState.notes;
-                if (prevState.mistakes !== undefined) {
-                     this.mistakes = prevState.mistakes;
-                     this.updateMistakesDisplay();
-                }
+                
+                // MISTAKE LOGIC CHANGED: Do NOT restore mistake count.
+                // Mistakes are permanent for the session.
+                
                 this.updateBoardVisualsOnly();
                 this.updateNumberPadStatus();
             }
@@ -919,23 +980,48 @@
 
                 if (isCorrect) {
                     this.stopTimer();
-                    this.saveVictory();
+                    this.saveRecord('win'); // 紀錄勝利
                     this.showVictoryModal();
                 }
             }
 
-            saveVictory() {
-                const history = JSON.parse(localStorage.getItem('sudoku_history') || '[]');
+            // 新增統一的紀錄儲存函式
+            saveRecord(result) {
+                let history = JSON.parse(localStorage.getItem('sudoku_history') || '[]');
                 const record = {
                     date: new Date().toISOString(),
                     difficulty: this.currentDifficulty,
-                    time: this.timer
+                    time: this.timer,
+                    mistakes: this.mistakes,
+                    result: result // 'win' or 'fail'
                 };
                 history.unshift(record);
+                
+                // 限制最多 50 筆
+                if (history.length > 50) {
+                    history = history.slice(0, 50);
+                }
+                
                 localStorage.setItem('sudoku_history', JSON.stringify(history));
-                if (this.isDailyChallenge) {
+                
+                if (this.isDailyChallenge && result === 'win') {
                     const today = new Date().toISOString().split('T')[0];
                     localStorage.setItem(`daily_completed_${today}`, 'true');
+                }
+
+                // Increment total wins counter (no cap)
+                if (result === 'win') {
+                    let totalWins = parseInt(localStorage.getItem('sudoku_total_wins') || '0');
+                    totalWins++;
+                    localStorage.setItem('sudoku_total_wins', totalWins);
+                    
+                    // Update Streak
+                    let currentStreak = parseInt(localStorage.getItem('sudoku_current_streak') || '0');
+                    currentStreak++;
+                    localStorage.setItem('sudoku_current_streak', currentStreak);
+                } else if (result === 'fail') {
+                    // Reset Streak on fail
+                    localStorage.setItem('sudoku_current_streak', 0);
                 }
             }
 
@@ -951,7 +1037,12 @@
 
             showStats() {
                 const history = JSON.parse(localStorage.getItem('sudoku_history') || '[]');
-                document.getElementById('stat-total').textContent = history.length;
+                const totalWins = localStorage.getItem('sudoku_total_wins') || '0';
+                const currentStreak = localStorage.getItem('sudoku_current_streak') || '0';
+                
+                document.getElementById('stat-total').textContent = totalWins;
+                document.getElementById('stat-current-streak').textContent = currentStreak;
+                
                 let streak = 0;
                 let date = new Date();
                 while (true) {
@@ -967,14 +1058,31 @@
 
                 const list = document.getElementById('history-list');
                 list.innerHTML = '';
-                history.slice(0, 10).forEach(rec => {
+                history.slice(0, 50).forEach(rec => {
                     const li = document.createElement('li');
                     li.className = 'flex justify-between items-center bg-slate-50 dark:bg-slate-700/50 p-2 rounded border border-slate-100 dark:border-slate-700';
                     const dateObj = new Date(rec.date);
                     const date = `${dateObj.getMonth()+1}/${dateObj.getDate()}`;
                     const mins = Math.floor(rec.time/60).toString().padStart(2,'0');
                     const secs = (rec.time%60).toString().padStart(2,'0');
-                    li.innerHTML = `<span class="text-slate-600 dark:text-slate-300 font-medium text-xs md:text-sm">${date} <span class="text-[10px] md:text-xs text-slate-400 font-normal">(${this.difficultyLabels[rec.difficulty] || rec.difficulty})</span></span><span class="font-mono font-bold text-brand-600 dark:text-brand-400 text-sm md:text-base">${mins}:${secs}</span>`;
+                    
+                    const isWin = rec.result !== 'fail';
+                    const resultText = isWin ? '通關' : '失敗';
+                    const resultColor = isWin ? 'text-green-600' : 'text-red-500';
+                    const mistakesText = rec.mistakes !== undefined ? `錯誤: ${rec.mistakes}` : '';
+
+                    li.innerHTML = `
+                        <div class="flex flex-col">
+                            <span class="text-slate-600 dark:text-slate-300 font-medium text-xs md:text-sm">
+                                ${date} <span class="text-[10px] md:text-xs text-slate-400 font-normal">(${this.difficultyLabels[rec.difficulty] || rec.difficulty})</span>
+                            </span>
+                            <span class="text-[10px] text-slate-400">${mistakesText}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="block font-bold ${resultColor} text-xs md:text-sm">${resultText}</span>
+                            <span class="font-mono text-brand-600 dark:text-brand-400 text-sm md:text-base">${mins}:${secs}</span>
+                        </div>
+                    `;
                     list.appendChild(li);
                 });
                 this.elements.statsModal.classList.remove('hidden');
@@ -987,3 +1095,4 @@
     </script>
 </body>
 </html>
+
